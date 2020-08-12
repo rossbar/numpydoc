@@ -129,8 +129,7 @@ class Docstring:
         self.obj = obj
         self.code_obj = inspect.unwrap(obj)
         self.raw_doc = obj.__doc__ or ""
-        self.clean_doc = pydoc.getdoc(obj)
-        self.doc = NumpyDocString(self.clean_doc)
+        self.doc = NumpyDocString(self.raw_doc)
 
     @staticmethod
     def _load_obj(name):
@@ -501,7 +500,7 @@ def validate(func_name):
         errs.append(error("GL08"))
         return {
             "type": doc.type,
-            "docstring": doc.clean_doc,
+            "docstring": doc.doc,
             "deprecated": doc.deprecated,
             "file": doc.source_file_name,
             "file_line": doc.source_file_def_line,
@@ -619,7 +618,7 @@ def validate(func_name):
         errs.append(error("EX01"))
     return {
         "type": doc.type,
-        "docstring": doc.clean_doc,
+        "docstring": doc.doc,
         "deprecated": doc.deprecated,
         "file": doc.source_file_name,
         "file_line": doc.source_file_def_line,
