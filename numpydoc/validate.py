@@ -425,6 +425,12 @@ def _check_desc(desc, code_no_desc, code_no_upper, code_no_period, **kwargs):
     return errs
 
 
+class ValidatorMixin:
+    @property
+    def has_docstring(self):
+        return not self._doc.is_empty()
+
+
 def validate(func_name):
     """
     Validate the docstring.
@@ -466,9 +472,12 @@ def validate(func_name):
     function.
     """
     doc = Docstring(func_name)
+    class ValidatedNumpyDocString(NumpyDocString, ValidatorMixin):
+        pass
+    ds = ValidatedNumpyDocString(doc.clean_doc)
 
     errs = []
-    if not doc.raw_doc:
+    if not ds.has_docstring:
         errs.append(error("GL08"))
         return {
             "type": doc.type,
