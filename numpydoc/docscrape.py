@@ -137,7 +137,7 @@ class NumpyDocString(Mapping):
     }
 
     def __init__(self, docstring, config={}):
-        orig_docstring = docstring
+        self._raw_docstring = docstring
         docstring = textwrap.dedent(docstring).split('\n')
 
         self._doc = Reader(docstring)
@@ -146,7 +146,7 @@ class NumpyDocString(Mapping):
         try:
             self._parse()
         except ParseError as e:
-            e.docstring = orig_docstring
+            e.docstring = self._raw_docstring
             raise
 
     def __getitem__(self, key):

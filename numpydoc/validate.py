@@ -430,6 +430,26 @@ class ValidatorMixin:
     def has_docstring(self):
         return not self._doc.is_empty()
 
+    @property
+    def start_blank_lines(self):
+        i = None
+        if self._raw_docstring:
+            for i, row in enumerate(self._raw_docstring.split("\n")):
+                if row.strip():
+                    break
+        return i
+
+    @property
+    def end_blank_lines(self):
+        i = None
+        if self._raw_docstring:
+            for i, row in enumerate(reversed(self._raw_docstring.split("\n"))):
+                if row.strip():
+                    break
+        return i
+
+        
+
 
 def validate(func_name):
     """
@@ -474,7 +494,7 @@ def validate(func_name):
     doc = Docstring(func_name)
     class ValidatedNumpyDocString(NumpyDocString, ValidatorMixin):
         pass
-    ds = ValidatedNumpyDocString(doc.clean_doc)
+    ds = ValidatedNumpyDocString(doc.raw_doc)
 
     errs = []
     if not ds.has_docstring:
@@ -489,9 +509,9 @@ def validate(func_name):
             "examples_errors": "",
         }
 
-    if doc.start_blank_lines != 1 and "\n" in doc.raw_doc:
+    if ds.start_blank_lines != 1 and "\n" in doc.raw_doc:
         errs.append(error("GL01"))
-    if doc.end_blank_lines != 1 and "\n" in doc.raw_doc:
+    if ds.end_blank_lines != 1 and "\n" in doc.raw_doc:
         errs.append(error("GL02"))
     if doc.double_blank_lines:
         errs.append(error("GL03"))
