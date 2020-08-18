@@ -287,9 +287,6 @@ class Validator:
 
         return errs
 
-    @property
-    def directives_without_two_colons(self):
-        return DIRECTIVE_PATTERN.findall(self.raw_doc)
 
     def parameter_type(self, param):
         return self.doc_parameters[param][0]
@@ -455,6 +452,15 @@ def correct_section_order(doc):
         errs.append(error("GL07", correct_sections=", ".join(correct_order)))
     return errs
 
+def check_deprecated_directive(doc):
+    if doc.deprecated and not doc.extended_summary.startswith(".. deprecated:: "):
+        return error("GL09")
+
+def directive_missing_colons(doc):
+    bad_directives = DIRECTIVE_PATTERN.findall(doc.raw_doc)
+    if bad_directives:
+        return error("GL10", directives=bad_directives)
+
 
 def validate(obj_name):
     """
@@ -524,6 +530,8 @@ def validate(obj_name):
         check_for_tabs,
         unexpected_sections,
         correct_section_order,
+        check_deprecated_directive,
+        directive_missing_colons,
     )
     for check in checks:
         err = check(doc)
@@ -536,12 +544,7 @@ def validate(obj_name):
 
 
 
-    if doc.deprecated and not doc.extended_summary.startswith(".. deprecated:: "):
-        errs.append(error("GL09"))
 
-    directives_without_two_colons = doc.directives_without_two_colons
-    if directives_without_two_colons:
-        errs.append(error("GL10", directives=directives_without_two_colons))
 
     if not doc.summary:
         errs.append(error("SS01"))
