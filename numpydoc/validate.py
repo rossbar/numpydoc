@@ -206,15 +206,6 @@ class Validator:
             pass
 
     @property
-    def end_blank_lines(self):
-        i = None
-        if self.raw_doc:
-            for i, row in enumerate(reversed(self.raw_doc.split("\n"))):
-                if row.strip():
-                    break
-        return i
-
-    @property
     def double_blank_lines(self):
         prev = True
         for row in self.raw_doc.split("\n"):
@@ -427,6 +418,16 @@ def start_blank_lines(doc):
     if i != 1 and "\n" in doc.raw_doc:
         return error("GL01")
 
+def end_blank_lines(doc):
+    i = None
+    if doc.raw_doc:
+        for i, row in enumerate(reversed(doc.raw_doc.split("\n"))):
+            if row.strip():
+                break
+    if i != 1 and "\n" in doc.raw_doc:
+        return error("GL02")
+
+
 
 def validate(obj_name):
     """
@@ -489,11 +490,14 @@ def validate(obj_name):
             "examples_errors": "",
         }
 
-    err = start_blank_lines(doc)
-    if err is not None:
-        errs.append(err)
-    if doc.end_blank_lines != 1 and "\n" in doc.raw_doc:
-        errs.append(error("GL02"))
+    checks = (
+        start_blank_lines,
+        end_blank_lines,
+    )
+    for check in checks:
+        err = check(doc)
+        if err is not None:
+            errs.append(err)
     if doc.double_blank_lines:
         errs.append(error("GL03"))
     for line in doc.raw_doc.splitlines():
