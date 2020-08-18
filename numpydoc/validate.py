@@ -206,15 +206,6 @@ class Validator:
             pass
 
     @property
-    def start_blank_lines(self):
-        i = None
-        if self.raw_doc:
-            for i, row in enumerate(self.raw_doc.split("\n")):
-                if row.strip():
-                    break
-        return i
-
-    @property
     def end_blank_lines(self):
         i = None
         if self.raw_doc:
@@ -427,6 +418,16 @@ def _check_desc(desc, code_no_desc, code_no_upper, code_no_period, **kwargs):
     return errs
 
 
+def start_blank_lines(doc):
+    i = None
+    if doc.raw_doc:
+        for i, row in enumerate(doc.raw_doc.split("\n")):
+            if row.strip():
+                break
+    if i != 1 and "\n" in doc.raw_doc:
+        return error("GL01")
+
+
 def validate(obj_name):
     """
     Validate the docstring.
@@ -488,8 +489,9 @@ def validate(obj_name):
             "examples_errors": "",
         }
 
-    if doc.start_blank_lines != 1 and "\n" in doc.raw_doc:
-        errs.append(error("GL01"))
+    err = start_blank_lines(doc)
+    if err is not None:
+        errs.append(err)
     if doc.end_blank_lines != 1 and "\n" in doc.raw_doc:
         errs.append(error("GL02"))
     if doc.double_blank_lines:
