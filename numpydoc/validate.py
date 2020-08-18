@@ -206,15 +206,6 @@ class Validator:
             pass
 
     @property
-    def double_blank_lines(self):
-        prev = True
-        for row in self.raw_doc.split("\n"):
-            if not prev and not row.strip():
-                return True
-            prev = row.strip()
-        return False
-
-    @property
     def section_titles(self):
         sections = []
         self.doc._doc.reset()
@@ -427,6 +418,12 @@ def end_blank_lines(doc):
     if i != 1 and "\n" in doc.raw_doc:
         return error("GL02")
 
+def double_blank_lines(self):
+    prev = True
+    for row in self.raw_doc.split("\n"):
+        if not prev and not row.strip():
+            return error("GL03")
+        prev = row.strip()
 
 
 def validate(obj_name):
@@ -493,13 +490,12 @@ def validate(obj_name):
     checks = (
         start_blank_lines,
         end_blank_lines,
+        double_blank_lines,
     )
     for check in checks:
         err = check(doc)
         if err is not None:
             errs.append(err)
-    if doc.double_blank_lines:
-        errs.append(error("GL03"))
     for line in doc.raw_doc.splitlines():
         if re.match("^ *\t", line):
             errs.append(error("GL05", line_with_tabs=line.lstrip()))
