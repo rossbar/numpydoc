@@ -205,19 +205,6 @@ class Validator:
             # return the line number as None, than crash
             pass
 
-    @property
-    def section_titles(self):
-        sections = []
-        self.doc._doc.reset()
-        while not self.doc._doc.eof():
-            content = self.doc._read_to_next_section()
-            if (
-                len(content) > 1
-                and len(content[0]) == len(content[1])
-                and set(content[1]) == {"-"}
-            ):
-                sections.append(content[0])
-        return sections
 
     @property
     def summary(self):
@@ -399,6 +386,20 @@ def _check_desc(desc, code_no_desc, code_no_upper, code_no_period, **kwargs):
             errs.append(error(code_no_period, **kwargs))
     return errs
 
+# TODO: Replace with NumpyDocString attr? See `section_names` in nds._parse
+def section_titles(doc):
+    sections = []
+    doc.doc._doc.reset()
+    while not doc.doc._doc.eof():
+        content = doc.doc._read_to_next_section()
+        if (
+            len(content) > 1
+            and len(content[0]) == len(content[1])
+            and set(content[1]) == {"-"}
+        ):
+            sections.append(content[0])
+    return sections
+
 
 def start_blank_lines(doc):
     i = None
@@ -418,12 +419,41 @@ def end_blank_lines(doc):
     if i != 1 and "\n" in doc.raw_doc:
         return error("GL02")
 
-def double_blank_lines(self):
+def double_blank_lines(doc):
     prev = True
-    for row in self.raw_doc.split("\n"):
+    for row in doc.raw_doc.split("\n"):
         if not prev and not row.strip():
             return error("GL03")
         prev = row.strip()
+
+def check_for_tabs(doc):
+    errs = []
+    for line in doc.raw_doc.splitlines():
+        if re.match("^ *\t", line):
+            errs.append(error("GL05", line_with_tabs=line.lstrip()))
+    return errs
+
+
+def unexpected_sections(doc):
+    errs = []
+    unexpected_sections = [
+        section for section in section_titles(doc) if section not in ALLOWED_SECTIONS
+    ]
+    for section in unexpected_sections:
+        errs.append(
+            error("GL06", section=section, allowed_sections=", ".join(ALLOWED_SECTIONS))
+        )
+    return errs
+
+def correct_section_order(doc):
+    errs = []
+    st = section_titles(doc)
+    correct_order = [
+        section for section in ALLOWED_SECTIONS if section in st
+    ]
+    if correct_order != st:
+        errs.append(error("GL07", correct_sections=", ".join(correct_order)))
+    return errs
 
 
 def validate(obj_name):
@@ -491,28 +521,20 @@ def validate(obj_name):
         start_blank_lines,
         end_blank_lines,
         double_blank_lines,
+        check_for_tabs,
+        unexpected_sections,
+        correct_section_order,
     )
     for check in checks:
         err = check(doc)
         if err is not None:
-            errs.append(err)
-    for line in doc.raw_doc.splitlines():
-        if re.match("^ *\t", line):
-            errs.append(error("GL05", line_with_tabs=line.lstrip()))
+            if isinstance(err, list):
+                errs.extend(err)
+            else:
+                errs.append(err)
 
-    unexpected_sections = [
-        section for section in doc.section_titles if section not in ALLOWED_SECTIONS
-    ]
-    for section in unexpected_sections:
-        errs.append(
-            error("GL06", section=section, allowed_sections=", ".join(ALLOWED_SECTIONS))
-        )
 
-    correct_order = [
-        section for section in ALLOWED_SECTIONS if section in doc.section_titles
-    ]
-    if correct_order != doc.section_titles:
-        errs.append(error("GL07", correct_sections=", ".join(correct_order)))
+
 
     if doc.deprecated and not doc.extended_summary.startswith(".. deprecated:: "):
         errs.append(error("GL09"))
