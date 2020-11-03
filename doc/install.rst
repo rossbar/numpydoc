@@ -84,6 +84,9 @@ numpydoc_xref_ignore : set
         numpydoc_xref_ignore = {'type', 'optional', 'default'}
 
     The default is an empty set.
+numpydoc_validate : bool
+    Whether or not to run docstring validation during the sphinx-build process.
+    Default is ``False``.
 numpydoc_edit_link : bool
   .. deprecated:: edit your HTML template instead
 
