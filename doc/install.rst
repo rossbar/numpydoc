@@ -87,6 +87,11 @@ numpydoc_xref_ignore : set
 numpydoc_validate : bool
     Whether or not to run docstring validation during the sphinx-build process.
     Default is ``False``.
+numpydoc_validation_checks : set
+    The set of validation checks to report during the sphinx build process.
+    Only has an effect when ``numpydoc_validate = True``.
+    By default, report warnings from all the validation checks provided by the
+    :doc:`validation` module.
 numpydoc_edit_link : bool
   .. deprecated:: edit your HTML template instead
 
