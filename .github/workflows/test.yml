@@ -40,10 +40,6 @@ jobs:
       run: |
         pytest -v --pyargs numpydoc
 
-    - name: Test coverage
-      run: |
-        codecov
-
     - name: Make sure CLI works
       run: |
         python -m numpydoc numpydoc.tests.test_main._capture_stdout
